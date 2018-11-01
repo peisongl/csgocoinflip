@@ -18,7 +18,6 @@
             <li class="message-info" v-for="message in messages" :class="{self: message.name === user.name }">
             
               <template v-if="message.type === 'userMessage'">
-                <img class="message-user-avatar" :src="message.avatar_url">
                 <div class="message-wrapper">
                   <span class="message-user">{{ message.name }}</span>
                   <p class="message-content">{{ message.message }}</p>
@@ -51,15 +50,14 @@
 <script>
 import io from 'socket.io-client'
 import { mapState } from 'vuex'
+import { start } from 'repl';
 export default {
   data () {
     return {
-      message: '',
       scoket: {},
       // 在线用户
-      onlineUsers: [],
-      // 消息记录
-      messages: []
+      status: "",
+      all_games: []
     }
   },
   created () {
@@ -74,25 +72,31 @@ export default {
       user: 'user'
     })
   },
-  watch: {
-    messages () {
-      this.$nextTick(() => {
-        const { chatMessage } = this.$refs
-        chatMessage.scrollTop = chatMessage.scrollHeight
-      })
-    }
-  },
   methods: {
-    sendMessage () {
-      this.socket.emit('chat', {
-        name: this.user.name,
-        avatar_url: this.user.avatar_url,
-        message: this.message,
-        type: 'userMessage'
-      })
-      this.message = ''
-      const { textarea } = this.$refs
-      textarea.focus()
+    startGame(game){
+      console.log("game ready to play")
+    },
+
+    createGame(){
+      if (this_status == 'oneline'){
+        this.socket.emit('create game', {
+        starter_name : this.socket_name,
+        starter_probability : this.socket_probability
+      })} 
+      else {
+        console.log("user has to be online to create game")
+      }
+    },
+
+    joinGame(game_id){
+      if (this_status == 'oneline'){
+        this.socket.emit('join game', {
+        game_id : game_id,
+        joiner_name : this.socket_name,
+        joiner_probability : this.socket_probability
+      })} else {
+        console.log("user has to be online to join game")
+      }
     }
   },
   mounted () {
@@ -101,26 +105,26 @@ export default {
     // 给客户端发送进入聊天室用户信息
     this.socket.emit('online', {
       name: this.user.name,
-      avatar_url: this.user.avatar_url,
-      type: 'join'
+      probability: this.user.probability,
     })
 
-    // 监听进入用户
-    this.socket.on('join', (data) => {
-      this.messages.push(data)
+    this.socket.on('game ready', (game) => {
+      startGame(game)
     })
+
+    this.socket.on('game created', (all_games) => {
+      this.all_games = all_games
+    })
+
     // 监听在线用户
     this.socket.on('online', (onlineUsers) => {
-      this.onlineUsers = onlineUsers
-    })
-
-    this.socket.on('chat', (data) => {
-      this.messages.push(data)
+      this.onlineUsers = onlineUsers,
+      this.status = 'online'
     })
 
     // 监听用户离开
     this.socket.on('user left', (data) => {
-      this.messages.push(data)
+     console.log('user left')
     })
 
     this.socket.on('disconnect', function () {

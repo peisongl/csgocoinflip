@@ -1,26 +1,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const mongoose = require('mongoose')
-const userRoutes = require('./server/api/user')
-const videoRoutes = require('./server/api/video')
-const commentRoutes = require('./server/api/comment')
-const imageRoutes = require('./server/api/image')
-const uploadRoutes = require('./server/api/upload')
 const socket = require('socket.io')
-const history = require('connect-history-api-fallback')
 const env = process.env.NODE_ENV || 'development'
-
-// const mongoConf = require('./mongo_conf')
-
-// let dbUrl = mongoConf.mongoUrl
-
-// connect db
-if (env === 'development') {
-  dbUrl = 'mongodb://localhost:27017/vnpastime'
-}
-
-mongoose.connect(dbUrl)
-mongoose.Promise = global.Promise
 
 const app = express()
 
@@ -29,18 +10,11 @@ app.use(bodyParser.json())
 
 app.get('/', function(req, res){
   res.send('<h1>Welcome Realtime csgo coin flip</h1>');
-});
-
-app.use(history())
+})
 
 if (env !== 'development') {
   app.use(express.static('./dist'))
 }
-
-// 错误处理
-app.use((err, req, res, next) => {
-  res.status(442).send({ error: err.message })
-})
 
 const server = app.listen(4000, () => {
   console.log(`Express started in ${app.get('env')} mode on http://localhsot:4000`)
@@ -66,16 +40,31 @@ io.on('connect', (socket) => {
     socket.name = user.name
     // 向所有客户端发送
     io.sockets.emit('online', onlineUsers)
-
-    socket.broadcast.emit('join', {
-      name: user.name,
-      type: 'join'
-    })
   })
 
-  socket.on('chat', (data) => {
-    io.sockets.emit('chat', data)
-  })
+
+  let all_games = []
+  socket.on('create game', function (data) {
+  
+    all_games.push({
+        starter_name : data.starter_name,
+        starter_probability : data.starter_probability
+      }
+    )
+
+    socket.emit('game created', all_games);
+  });
+
+  socket.on('join game', function (data) {
+    
+    const this_game = all_games.find(game => game.id === data.id)
+
+    this_game.joiner.name = data.joiner_name;
+    this_game.joiner.probability = data.joiner_probability;
+
+    socket.emit('game ready', this_game);
+  });
+
 
   socket.on('disconnect', () => {
     const onlinUser = onlineUsers.find(onlinUser => onlinUser.name === socket.name)
