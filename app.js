@@ -2,6 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const socket = require('socket.io')
 const env = process.env.NODE_ENV || 'development'
+const history = require('connect-history-api-fallback')
 
 const app = express()
 
@@ -15,6 +16,8 @@ app.get('/', function(req, res){
 if (env !== 'development') {
   app.use(express.static('./dist'))
 }
+
+app.use(history())
 
 const server = app.listen(4000, () => {
   console.log(`Express started in ${app.get('env')} mode on http://localhsot:4000`)
@@ -47,8 +50,7 @@ io.on('connect', (socket) => {
   socket.on('create game', function (data) {
   
     all_games.push({
-        starter_name : data.starter_name,
-        starter_probability : data.starter_probability
+        starter_id : data.starter_id
       }
     )
 
@@ -67,6 +69,7 @@ io.on('connect', (socket) => {
 
 
   socket.on('disconnect', () => {
+    console.log('li kai la')
     const onlinUser = onlineUsers.find(onlinUser => onlinUser.name === socket.name)
     const index = onlineUsers.indexOf(onlinUser)
     onlineUsers.splice(index, 1)

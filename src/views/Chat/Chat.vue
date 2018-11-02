@@ -1,49 +1,14 @@
 <template>
-  <div class="chat">
-    <div class="chat-box">
-      <div class="user-list">
-        <span class="title">在线用户</span>
-        <ul class="online-user">
-          <li v-for="user in onlineUsers">
-            <img :src="user.avatar_url">
-            <span>{{ user.name }}</span>
-          </li>
-        </ul>
+  <div class="gamelist">
+      <div class="games">
+        <Loading v-show="!games.length > 0"></Loading>
+        <GameItem v-for="(game, index) in games" 
+          :video="game" 
+          :key="index">
+        </GameItem>
       </div>
-      <div class="chat-window">
-        <span class="descript-title">聊天消息</span>
-        <div class="chat-message" ref="chatMessage">
-
-          <ul>
-            <li class="message-info" v-for="message in messages" :class="{self: message.name === user.name }">
-            
-              <template v-if="message.type === 'userMessage'">
-                <div class="message-wrapper">
-                  <span class="message-user">{{ message.name }}</span>
-                  <p class="message-content">{{ message.message }}</p>
-                </div>
-              </template>
-
-              <template v-else-if="message.type === 'left'">
-                <p class="server-message">{{ message.name }}  离开</p>
-              </template>
-              
-              <template v-else-if="message.type === 'join'">
-                <p class="server-message">{{ message.name }}  进入</p>
-              </template>
-
-            </li>
-          </ul>
-
-        </div>
-        <div class="send-message">
-          <textarea v-model="message" class="message-text" placeholder="输入您的消息..." ref="textarea" autofocus @keyup.enter="sendMessage"></textarea>
-          <svg class="icon" aria-hidden="true" @click="sendMessage">
-            <use xlink:href="#icon-sendemail"></use>
-          </svg>
-        </div>
-      </div>
-    </div>
+      <Pagination v-show="games.length"></Pagination>
+      <AppFooter v-show="games.length"></AppFooter>
   </div>
 </template>
 
@@ -57,7 +22,7 @@ export default {
       scoket: {},
       // 在线用户
       status: "",
-      all_games: []
+      games: []
     }
   },
   created () {
@@ -99,6 +64,16 @@ export default {
       }
     }
   },
+
+  watch: {
+    messages () {
+      this.$nextTick(() => {
+        const { chatMessage } = this.$refs
+        chatMessage.scrollTop = chatMessage.scrollHeight
+      })
+    }
+  },
+
   mounted () {
     this.$store.state.isHome = false
 
@@ -112,8 +87,8 @@ export default {
       startGame(game)
     })
 
-    this.socket.on('game created', (all_games) => {
-      this.all_games = all_games
+    this.socket.on('game created', (games) => {
+      this.games = games
     })
 
     // 监听在线用户
@@ -135,189 +110,47 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../../assets/scss/mixins.scss';
-
-ul {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-}
-.chat {
+@import "src/assets/scss/mixins.scss";
+.gamelist {
   font-size: 1rem;
-  padding-top: 3.75rem;
-  background: #E8E6FD;
-  height: 100vh;
-
-  .chat-box {
-    width: 50rem;
-    margin: 0 auto;
-    margin-top: 1rem;
-    background: #fff;
-    height: 36.5rem;
-    border-radius: 7px;
-    box-shadow: 1px 1px 2px rgba(0,0,0,.1),
-        -1px -1px 2px rgba(0,0,0,.1);
-    display: flex;
-    @include mediaQ(768px) {
-      margin-top: 0;
-      width: 100%;
-      height: 100%;
-    }
+  @include stickFooter;
+  width: 100%;
+  position: relative;
+  background-image: url('https://1x.com/images/user/6872df05db6242eb3f61f8f1e646deb3-hd2.jpg');
+  background-repeat: no-repeat;
+  background-size: 100% 28.125rem;
+  @include mediaQ(480px) {
+    background-size: 100% 15rem;
   }
-
-  .user-list {
-    width: 15rem;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    @include mediaQ(768px) {
-      display: none;
-    }
-
-    .title {
-      text-align: center;
-      padding: 1rem 0;
-      border: 1px solid #eee;
-      color: #999;
-    }
-
-    .online-user {
-      overflow: auto;
-      height: calc(100% - 6.5rem);
-      border-bottom: 1px solid #eee;
-
-      li {
-        width: 100%;
-        padding: .5rem .5rem;
-        display: flex;
-        align-items: center;
-        border-bottom: 1px solid rgba(0,0,0,0.02);
-        cursor: pointer;
-        transition: all .3s;
-        &:hover {
-          background: #eee;
-        }
-
-        img {
-          width: 2.3rem;
-          height: 2.3rem;
-          border-radius: 50%;
-          margin-right: .5rem;
-        }
-      }
-    }
+  @include mediaQ(768px, 481px) {
+    background-size: 100% 25rem;
   }
-
-  .chat-window {
-    width: 35rem;
-    background: #F6F6FC;
-    height: 100%;
-    border-top-right-radius: 7px;
-    border-bottom-right-radius: 7px;
-    display: flex;
-    flex-direction: column;
-    @include mediaQ(768px) {
-      width: 100%;
-      border-radius: 7px;
-    }
-
-    .descript-title {
-      padding: 1rem 0 1rem 1rem;
-      color: #999;
-    }
-
-    .chat-message {
-      overflow-y: scroll;
-      height: calc(100% - 6.5rem);
-      border-bottom: 1px solid #eee;
-      width: 100%;
-
-      .message-info {
-        padding: .5rem 0 .5rem .5rem;
-        display: flex;
-        width: 100%;
-        @include mediaQ(768px) {
-          line-height: 1.5;
-        }
-
-        .message-user-avatar {
-          width: 2rem;
-          height: 2rem;
-          border-radius: 50%;
-        }
-
-        .message-wrapper {
-          display: flex;
-          flex-direction: column;
-          padding: 0 .5rem;
-          max-width: 75%;
-        }
-        .message-user {
-          display: inline-block;
-          vertical-align: top;
-          color: #999;
-          font-size: .8rem;
-        }
-
-        .message-content {
-          background: #fff;
-          display: inline-block;
-          padding: .5rem;
-          max-width: 100%;
-          border-radius: 7px;
-          margin: 0;
-          margin-top: .5rem;
-          box-shadow: 1px 1px 2px rgba(0,0,0,.1),
-            -1px -1px 2px rgba(0,0,0,.1);
-        }
-      }
-
-      .server-message {
-        font-size: .7rem;
-        color: #999;
-        width: 100%;
-        text-align: center;
-      }
-      .self {
-        text-align: right;
-        justify-content: flex-end;
-        padding: .5rem 1rem .5rem 0;
-
-        .message-user-avatar {
-            order: 2;
-        }
-
-        .message-content {
-          text-align: left;
-        }
-      }
-    }
-
-    .send-message {
-      height: 3rem;
-      display: flex;
-      align-items: center;
-
-      .message-text {
-        height: 2rem;
-        width: 80%;
-        color: #999;
-        outline: none;
-        border: none;
-        background: #f6f6f6;
-        resize: none;
-        border-bottom: 1px solid rgb(0, 50, 200);
-        margin-left: 1rem;
-      }
-
-      svg {
-        width: 2rem;
-        height: 2rem;
-        cursor: pointer;
-        margin-left: .5rem;
-      }
-    }
+  @include mediaQ(960px, 769px) {
+    background-size: 100% 25rem;
   }
-
+}
+.games {
+  padding-top: 33rem;
+  padding-bottom: 3rem;
+  width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-flow: wrap;
+  @include mediaQ(480px) {
+    padding-top: 15rem;
+  }
+  @include mediaQ(768px, 481px) {
+    padding-top: 27rem;
+  }
+  @include mediaQ(960px, 769px) {
+    padding-top: 27rem;
+  }
+  @include mediaQ(1365px, 961px) {
+    padding-top: 30rem;
+  }
+  @include mediaQ(1365px) {
+    justify-content: space-around;
+    width: 90%;
+  }
 }
 </style>

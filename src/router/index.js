@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 
-const Chat = resolve => require(['views/chat/Chat'], resolve)
+const GameList = resolve => require(['../views/Gamelist/GameList'], resolve)
 
 Vue.use(Router)
 
@@ -9,9 +9,9 @@ export default new Router({
   mode: 'history',
   routes: [
     {
-      path: '/chat',
-      name: 'chat',
-      component: Chat,
+      path: '/',
+      name: 'Game',
+      component: GameList,
       meta: {
         requireAuth: true
       }
