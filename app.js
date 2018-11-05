@@ -26,10 +26,12 @@ const server = app.listen(4000, () => {
 // socket setup
 const io = socket(server)
 let onlineUsers = []
+let all_games = []
 
 io.on('connect', (socket) => {
   console.log('进入')
   socket.on('online', (user) => {
+    console.log('adding user')
     if (onlineUsers.length > 0) {
       const onlineUser = onlineUsers.find(onlineUser => onlineUser.name === user.name)
       if (!onlineUser && user.name) {
@@ -40,21 +42,21 @@ io.on('connect', (socket) => {
         onlineUsers.push(user)
       }
     }
+    console.log('adding user done')
     socket.name = user.name
     // 向所有客户端发送
-    io.sockets.emit('online', onlineUsers)
+    io.sockets.emit('online', onlineUsers);
+    io.sockets.emit('current game', all_games);
   })
 
-
-  let all_games = []
   socket.on('create game', function (data) {
-  
+    
+    console.log("creating game now")
     all_games.push({
         starter_id : data.starter_id
       }
-    )
-
-    socket.emit('game created', all_games);
+    );
+    io.sockets.emit('current game', all_games);
   });
 
   socket.on('join game', function (data) {

@@ -3,43 +3,34 @@
 
     <h1> CSGO COIN FLIP</h1>
     
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <div id="action-button">
+      <input id="create_game" type="button" value="creategame" @click='createGame' />
+    </div>
     
-    <input id="create_game" type="button" value="creategame" @click='createGame' />
-
-    <!-- <div class="gamelist">
-        <div class="games">
+    <div class="gamelist">
+      <div class="games">
           <GameItem v-for="(game, index) in games" 
-            :video="game" 
+            :game="game" 
             :key="index">
           </GameItem>
-        </div>
-        <AppFooter v-show="games.length"></AppFooter>
-    </div> -->
-
+      </div>
+     </div>
     
   </div>
 </template>
 
 <script>
-import HelloWorld from '../../components/HelloWorld/HelloWorld'
 import GameItem from '../../components/Game/GameItem'
-import AppFooter from '../../components/Footer/App-Footer'
 
 import io from 'socket.io-client'
-import { mapState } from 'vuex'
 import { start } from 'repl';
 export default {
   components: {
-    HelloWorld,
-    AppFooter
+    GameItem
   },
   data () {
     return {
-      scoket: {},
       // 在线用户
-      status: "",
-      id,
       games: []
     }
   },
@@ -48,12 +39,8 @@ export default {
     if (process.env.NODE_ENV === 'development') {
       url = 'http://localhost:4000'
     }
+    console.log("created function")
     this.socket = io.connect(url)
-  },
-  computed: {
-    ...mapState({
-      user: 'user'
-    })
   },
   methods: {
     startGame(game){
@@ -61,57 +48,44 @@ export default {
     },
 
     createGame(){
-      if (this_status == 'oneline'){
+        console.log("creating game now");
         this.socket.emit('create game', {
         starter_id : this.socket.id
-      })} 
-      else {
-        console.log("user has to be online to create game")
-      }
-    },
+      })} ,
 
     joinGame(game_id){
-      if (this_status == 'oneline'){
         this.socket.emit('join game', {
-        game_id : game_id,
-        joiner_name : this.socket_name,
-        joiner_probability : this.socket_probability
-      })} else {
-        console.log("user has to be online to join game")
-      }
-    }
-  },
+        game_id : this.socket.id,
+        joiner_name : this.socket.id
+      })}
+    },
 
   watch: {
-    messages () {
+    games () {
       this.$nextTick(() => {
-        const { chatMessage } = this.$refs
-        chatMessage.scrollTop = chatMessage.scrollHeight
+
       })
     }
   },
 
   mounted () {
-    this.$store.state.isHome = false
 
     // 给客户端发送进入聊天室用户信息
     this.socket.emit('online', {
-      name: this.user.name,
-      probability: this.user.probability,
+      name: this.socket.id
     })
 
     this.socket.on('game ready', (game) => {
       startGame(game)
     })
 
-    this.socket.on('game created', (games) => {
+    this.socket.on('current game', (games) => {
       this.games = games
     })
 
     // 监听在线用户
     this.socket.on('online', (onlineUsers) => {
-      this.onlineUsers = onlineUsers,
-      this.status = 'online'
+      this.onlineUsers = onlineUsers
     })
 
     // 监听用户离开
@@ -126,48 +100,6 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
-@import "src/assets/scss/mixins.scss";
-.gamelist {
-  font-size: 1rem;
-  @include stickFooter;
-  width: 100%;
-  position: relative;
-  background-image: url('https://1x.com/images/user/6872df05db6242eb3f61f8f1e646deb3-hd2.jpg');
-  background-repeat: no-repeat;
-  background-size: 100% 28.125rem;
-  @include mediaQ(480px) {
-    background-size: 100% 15rem;
-  }
-  @include mediaQ(768px, 481px) {
-    background-size: 100% 25rem;
-  }
-  @include mediaQ(960px, 769px) {
-    background-size: 100% 25rem;
-  }
-}
-.games {
-  padding-top: 33rem;
-  padding-bottom: 3rem;
-  width: 1100px;
-  margin: 0 auto;
-  display: flex;
-  flex-flow: wrap;
-  @include mediaQ(480px) {
-    padding-top: 15rem;
-  }
-  @include mediaQ(768px, 481px) {
-    padding-top: 27rem;
-  }
-  @include mediaQ(960px, 769px) {
-    padding-top: 27rem;
-  }
-  @include mediaQ(1365px, 961px) {
-    padding-top: 30rem;
-  }
-  @include mediaQ(1365px) {
-    justify-content: space-around;
-    width: 90%;
-  }
-}
+<style>
+
 </style>

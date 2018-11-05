@@ -1,6 +1,6 @@
 <template>
   <div class="game">
-    <span>{{ game.starter_name }}</span>
+    <h1>{{ game.starter_id }}</h1>
   </div>
 </template>
 
@@ -10,5 +10,5 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style>
 </style>
