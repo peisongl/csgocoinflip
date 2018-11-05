@@ -53,20 +53,25 @@ io.on('connect', (socket) => {
     
     console.log("creating game now")
     all_games.push({
-        starter_id : data.starter_id
+        game_id : data.game_id,
+        starter_id : data.starter_id,
+        joiner_id: ""
       }
     );
+    console.log("creating game done")
     io.sockets.emit('current game', all_games);
   });
 
   socket.on('join game', function (data) {
+
+    console.log("creating game now")
     
-    const this_game = all_games.find(game => game.id === data.id)
+    const this_game = all_games.find(game => game.game_id === data.game_id)
 
-    this_game.joiner.name = data.joiner_name;
-    this_game.joiner.probability = data.joiner_probability;
+    this_game.joiner_id = data.joiner_id;
 
-    socket.emit('game ready', this_game);
+    io.sockets.emit('current game', all_games);
+    // socket.emit('game ready', this_game);
   });
 
 

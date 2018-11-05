@@ -31,6 +31,7 @@ export default {
   data () {
     return {
       // 在线用户
+      // why no socket
       games: []
     }
   },
@@ -48,8 +49,8 @@ export default {
     },
 
     createGame(){
-        console.log("creating game now");
         this.socket.emit('create game', {
+        game_id: this.socket.id,
         starter_id : this.socket.id
       })} ,
 
