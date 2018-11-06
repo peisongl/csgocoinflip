@@ -11,7 +11,8 @@
       <div class="games">
           <GameItem v-for="(game, index) in games" 
             :game="game" 
-            :key="index">
+            :key="index"
+            @emitJoinGameID="joinGame($event)">
           </GameItem>
       </div>
      </div>
@@ -25,9 +26,11 @@ import GameItem from '../../components/Game/GameItem'
 import io from 'socket.io-client'
 import { start } from 'repl';
 export default {
+
   components: {
     GameItem
   },
+
   data () {
     return {
       // 在线用户
@@ -35,6 +38,7 @@ export default {
       games: []
     }
   },
+
   created () {
     let url = 'www.xxxuthus.cn'
     if (process.env.NODE_ENV === 'development') {
@@ -43,6 +47,7 @@ export default {
     console.log("created function")
     this.socket = io.connect(url)
   },
+
   methods: {
     startGame(game){
       console.log("game ready to play")
@@ -55,9 +60,10 @@ export default {
       })} ,
 
     joinGame(game_id){
+        console.log("received game_id from child")
         this.socket.emit('join game', {
-        game_id : this.socket.id,
-        joiner_name : this.socket.id
+        game_id : game_id,
+        joiner_id : this.socket.id
       })}
     },
 

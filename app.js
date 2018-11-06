@@ -64,9 +64,14 @@ io.on('connect', (socket) => {
 
   socket.on('join game', function (data) {
 
-    console.log("creating game now")
+    console.log("joining game now");
+    console.log(data.game_id);
     
-    const this_game = all_games.find(game => game.game_id === data.game_id)
+    const this_game = all_games.find(game => game.game_id === data.game_id);
+
+    console.log(this_game.game_id);
+
+
 
     this_game.joiner_id = data.joiner_id;
 
