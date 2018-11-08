@@ -12,7 +12,8 @@
           <GameItem v-for="(game, index) in games" 
             :game="game" 
             :key="index"
-            @emitJoinGameID="joinGame($event)">
+            @emitJoinGameID="joinGame($event)"
+            @gameResult="sendGameResult($event)">
           </GameItem>
       </div>
      </div>
@@ -64,7 +65,13 @@ export default {
         this.socket.emit('join game', {
         game_id : game_id,
         joiner_id : this.socket.id
-      })}
+      })},
+    sendGameResult({game_id, res}){
+        console.log("sending game result to server")
+          this.socket.emit('game result', {
+          game_id : game_id,
+          game_result : res
+        }) }
     },
 
   watch: {

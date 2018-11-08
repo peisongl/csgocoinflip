@@ -55,7 +55,9 @@ io.on('connect', (socket) => {
     all_games.push({
         game_id : data.game_id,
         starter_id : data.starter_id,
-        joiner_id: ""
+        joiner_id: "",
+        ready: false,
+        game_result : ""
       }
     );
     console.log("creating game done")
@@ -66,14 +68,28 @@ io.on('connect', (socket) => {
 
     console.log("joining game now");
     console.log(data.game_id);
-    
+
     const this_game = all_games.find(game => game.game_id === data.game_id);
 
     console.log(this_game.game_id);
 
-
-
     this_game.joiner_id = data.joiner_id;
+    this_game.ready = true;
+
+    io.sockets.emit('current game', all_games);
+    // socket.emit('game ready', this_game);
+  });
+
+  socket.on('game result', function (data) {
+    console.log("updating game result now");
+
+    const this_game = all_games.find(game => game.game_id === data.game_id);
+
+    this_game.game_result = data.game_result;
+    // store game history
+    all_games.indexOf(this_game)
+
+    all_games.splice(index, 1)
 
     io.sockets.emit('current game', all_games);
     // socket.emit('game ready', this_game);
