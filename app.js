@@ -3,11 +3,37 @@ const bodyParser = require('body-parser')
 const socket = require('socket.io')
 const env = process.env.NODE_ENV || 'development'
 const history = require('connect-history-api-fallback')
+const passport = require('passport');
+const mongoose = require('mongoose');
+
+// connect db
+if (env === 'development') {
+  dbUrl = 'mongodb://localhost:27017/csgocoinflip'
+}
+
+mongoose.connect(dbUrl)
+mongoose.Promise = global.Promise
+
+// const UserModel = require('./server/models/users');
+// const user = UserModel.create({ email: 'sdfsdf', password: '23424234lksdjflk' });
+// console.log(user)
+
+
+require('./passport')
 
 const app = express()
 
 app.set('tokenSecret', 'csgocoin')
 app.use(bodyParser.json())
+
+const authRoute = require('./server/api/auth');
+const routes = require('./server/api/coinflip');
+
+app.use(function(req, res, next) { res.header("Access-Control-Allow-Origin", "*"); res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept"); next(); }); 
+
+app.use('/auth', authRoute);
+app.use('/coinflip', passport.authenticate('jwt', { session : false }), routes );
+
 
 app.get('/', function(req, res){
   res.send('<h1>Welcome Realtime csgo coin flip</h1>');
@@ -22,6 +48,25 @@ app.use(history())
 const server = app.listen(4000, () => {
   console.log(`Express started in ${app.get('env')} mode on http://localhsot:4000`)
 })
+
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  var err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
+
+// error handler
+app.use(function(err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+  // render the error page
+  res.status(err.status || 500);
+  res.send('error');
+});
+
 
 // socket setup
 const io = socket(server)
