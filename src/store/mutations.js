@@ -1,5 +1,4 @@
 import * as types from './mutations-type'
-import { fetchVideos, fetchVideoByUserid } from '../api/video'
 import { fetchUserById } from '../api/user'
 
 const mutations = {

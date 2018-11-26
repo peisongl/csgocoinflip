@@ -13,19 +13,11 @@
         <input type="password" placeholder="密码" v-model="formInfo.password"/>
       </div>
 
-      <button v-if="signType === 'signin'" ref="submitButton" type="submit" class="sign" @click.prevent="sign('signin')">
+      <button  ref="submitButton" type="submit" class="sign" @click.prevent="sign()">
         <span v-show="!isLoading">登录</span>
         <span v-show="isLoading">登录中...</span>
       </button>
 
-      <button v-else-if="signType === 'signup'" ref="submitButton" type="submit" class="sign" @click.prevent="sign('signup')">
-        <span v-show="!isLoading">注册</span>
-        <span v-show="isLoading">注册中...</span>
-      </button>
-
-      <a v-show="signType === 'signin'" class="signup" href="#" @click.prevent="switchSignup">没有帐号？点击注册</a>
-
-      <a v-show="signType === 'signup'" class="signup" href="#" @click.prevent="switchSignup">已有帐号返回登录</a>
     </form>
 </template>
 
@@ -41,32 +33,27 @@ export default {
       isLoading: false
     }
   },
-  computed: {
-    ...mapState({
-      signType: 'signType'
-    })
-  },
+
   methods: {
     // 登录方法,注册
-    sign (type) {
+    sign () {
       let { signinForm, submitButton } = this.$refs
       submitButton.disabled = 'disabled'
       this.isLoading = true
       const formInfo = {
         username: this.formInfo.username,
-        password: this.formInfo.password,
-        type: type
+        password: this.formInfo.password
       }
       this.$store.dispatch('SIGN_BY_USERNAME', formInfo).then((data) => {
         // 为true时
         if (data) {
           signinForm.reset()
           this.formInfo = {}
-          this.$store.state.signType = 'signin'
           this.$store.state.message = {}
-          this.$store.commit('CLOSE_SIGN_DIALOG')
+          // this.$store.commit('CLOSE_SIGN_DIALOG')
           submitButton.disabled = ''
           this.isLoading = false
+          this.$router.push({ name: 'Game'})
         } else { // 为false的时候，既验证失败，将按钮重新至为可用
           this.isLoading = false
           submitButton.disabled = ''
@@ -74,16 +61,7 @@ export default {
       }).catch(err => {
         this.isLoading = false
         submitButton.disabled = ''
-        this.$store.state.message = {
-          success: false,
-          message: err
-        }
       })
-    },
-    switchSignup () {
-      this.$store.state.message = {}
-      const { signType } = this.$store.state
-      this.$store.state.signType = signType === 'signup' ? 'signin' : 'signup'
     }
   }
 }

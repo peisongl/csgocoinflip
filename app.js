@@ -3,6 +3,20 @@ const bodyParser = require('body-parser')
 const socket = require('socket.io')
 const env = process.env.NODE_ENV || 'development'
 const history = require('connect-history-api-fallback')
+const passport = require('passport');
+const mongoose = require('mongoose');
+
+// connect db
+if (env === 'development') {
+  dbUrl = 'mongodb://localhost:27017/csgocoinflip'
+}
+
+mongoose.connect(dbUrl)
+mongoose.Promise = global.Promise
+
+// const UserModel = require('./server/models/users');
+// const user = UserModel.create({ email: 'sdfsdf', password: '23424234lksdjflk' });
+// console.log(user)
 
 
 require('./passport')
@@ -12,11 +26,13 @@ const app = express()
 app.set('tokenSecret', 'csgocoin')
 app.use(bodyParser.json())
 
-const routes = require('./server/api/');
 const authRoute = require('./server/api/auth');
+const routes = require('./server/api/coinflip');
 
-app.use('/', routes);
-app.use('/user', passport.authenticate('jwt', { session : false }), authRoute );
+app.use(function(req, res, next) { res.header("Access-Control-Allow-Origin", "*"); res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept"); next(); }); 
+
+app.use('/auth', authRoute);
+app.use('/coinflip', passport.authenticate('jwt', { session : false }), routes );
 
 
 app.get('/', function(req, res){
@@ -48,7 +64,7 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.send('error');
 });
 
 

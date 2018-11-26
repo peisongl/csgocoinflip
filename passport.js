@@ -1,6 +1,6 @@
 const passport = require('passport');
 const localStrategy = require('passport-local').Strategy;
-const UserModel = require('../model/model');
+const UserModel = require('./server/models/users');
 
 //Create a passport middleware to handle user registration
 passport.use('signup', new localStrategy({
@@ -8,8 +8,12 @@ passport.use('signup', new localStrategy({
   passwordField : 'password'
 }, async (email, password, done) => {
     try {
+      console.log("i got username and password")
+      console.log(email)
+      console.log(password)
       //Save the information provided by the user to the the database
       const user = await UserModel.create({ email, password });
+      console.log('after create')
       //Send the user information to the next middleware
       return done(null, user);
     } catch (error) {
@@ -22,6 +26,9 @@ passport.use('login', new localStrategy({
   usernameField : 'email',
   passwordField : 'password'
 }, async (email, password, done) => {
+  console.log(email)
+  console.log(password)
+
   try {
     //Find the user associated with the email provided by the user
     const user = await UserModel.findOne({ email });
@@ -51,11 +58,20 @@ passport.use(new JWTstrategy({
   //secret we used to sign our JWT
   secretOrKey : 'top_secret',
   //we expect the user to send the token as a query paramater with the name 'secret_token'
-  jwtFromRequest : ExtractJWT.fromUrlQueryParameter('secret_token')
-}, async (token, done) => {
+  // jwtFromRequest : ExtractJWT.fromUrlQueryParameter('secret_token')
+  jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken()
+}, async (jwt_payload, done) => {
   try {
-    //Pass the user details to the next middleware
-    return done(null, token.user);
+      //find the user in db if needed
+      return UserModel.findOneById({id: jwt_payload._id})
+      // return UserModel.findOneById(jwt_payload.id)
+      .then(user => {
+          return cb(null, user);
+      })
+      .catch(err => {
+          return cb(err);
+      });
+
   } catch (error) {
     done(error);
   }
